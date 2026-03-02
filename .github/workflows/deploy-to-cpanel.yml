@@ -18,14 +18,14 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install dependencies (if any)
+      - name: Install dependencies
         run: |
           if [ -f package.json ]; then npm ci; fi
 
       - name: Run static generator
         run: node tools/generate.js
 
-      - name: Deploy via SFTP (SSH)
+      - name: Deploy via SFTP to cPanel
         uses: appleboy/scp-action@v0.1.6
         with:
           host: ${{ secrets.HOST }}
@@ -40,13 +40,3 @@ jobs:
             article/
             articles.json
           target: ${{ secrets.REMOTE_PATH }}
-
-      - name: Deploy via FTP fallback (optional)
-        if: failure()
-        uses: SamKirkland/FTP-Deploy-Action@4.3.0
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASS }}
-          local-dir: .
-          server-dir: ${{ secrets.REMOTE_PATH }}
