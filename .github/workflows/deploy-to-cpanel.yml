@@ -29,7 +29,7 @@ jobs:
       # haven't managed to register the key on the server. the FTP action is very
       # simple and often works on cPanel without extra setup.
       - name: Deploy via SFTP to cPanel
-        if: ${{ secrets.SSH_PRIVATE_KEY != '' }}
+        if: ${{ secrets.SSH_PRIVATE_KEY }}
         uses: appleboy/scp-action@v0.1.6
         with:
           host: ${{ secrets.HOST }}
@@ -41,8 +41,8 @@ jobs:
           rm: true
 
       - name: Deploy via FTP fallback
-        # conditionally run when FTP credentials exist and SSH key is not set.
-        if: ${{ secrets.FTP_PASS != '' && secrets.SSH_PRIVATE_KEY == '' }}
+        # run if SSH failed or is not set, and FTP credentials exist
+        if: ${{ secrets.FTP_PASS && !secrets.SSH_PRIVATE_KEY }}
         uses: SamKirkland/FTP-Deploy-Action@4.3.0
         with:
           server: ${{ secrets.FTP_HOST }}
