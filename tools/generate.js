@@ -39,6 +39,32 @@ function readExistingArticles() {
   return [];
 }
 
+function extractFirstImage(content) {
+  // Look for the first significant image in the article content
+  // Typically the main article image with class "img-fluid w-100"
+  const imgRegex = /<img[^>]+src=["']([^"']+)["'][^>]*>/gi;
+  const matches = [];
+  let match;
+  
+  while ((match = imgRegex.exec(content)) !== null) {
+    const src = match[1];
+    // Skip logo, ads, and small profile images
+    if (!src.includes('logo.png') && 
+        !src.includes('ads-') && 
+        !src.includes('cewe') && 
+        !src.includes('cowok') && 
+        !src.includes('alfin.jpg') &&
+        !src.includes('news-800x500-')) {
+      // Convert relative path from article folder to root-relative path
+      const normalizedSrc = src.replace('../img/', 'img/');
+      matches.push(normalizedSrc);
+    }
+  }
+  
+  // Return the first valid image, or default if none found
+  return matches.length > 0 ? matches[0] : 'img/logo.png';
+}
+
 function scanLocalArticles() {
   const localArticles = [];
   if (!fs.existsSync(OUT_DIR)) return localArticles;
@@ -64,17 +90,20 @@ function scanLocalArticles() {
       const pMatch = content.match(/<p[^>]*>([^<]+)<\/p>/);
       if (pMatch) excerpt = pMatch[1].trim().substring(0, 150);
       
+      // Extract first image from content
+      const imagePath = extractFirstImage(content);
+      
       localArticles.push({
         title,
         excerpt,
         category: 'Local',
         date: new Date().toISOString().split('T')[0],
-        image: 'img/logo.png',  // default image for local articles
+        image: imagePath,
         url: `article/${slug}.html`,
         slug,
         isLocal: true
       });
-      console.log(`   📄 ${slug}`);
+      console.log(`   📄 ${slug} (image: ${imagePath})`);
     } catch (err) {
       console.warn(`   ⚠️  Error reading ${file}:`, err.message);
     }

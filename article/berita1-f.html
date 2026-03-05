@@ -35,17 +35,12 @@
                         <li class="nav-item border-right border-secondary">
                             <a class="nav-link text-body small" href="#" id="currentDate"></a>
                         </li>
-                        <li class="nav-item border-right border-secondary" id="registerItem">
-                            <a class="nav-link text-body small" href="../register.html">Register</a>
+                        
+                        <li class="nav-item border-right border-secondary">
+                            <a class="nav-link text-body small" href="../contact.html">Contact</a>
                         </li>
-                        <li class="nav-item" id="loginItem">
+                        <li class="nav-item">
                             <a class="nav-link text-body small" href="../login.html">Login</a>
-                        </li>
-                        <li class="nav-item border-right border-secondary d-none" id="userItem">
-                            <span class="nav-link text-body small" id="username"></span>
-                        </li>
-                        <li class="nav-item d-none" id="logoutItem">
-                            <a class="nav-link text-body small" href="#" onclick="logout()">Logout</a>
                         </li>
                     </ul>
                 </nav>
@@ -348,7 +343,9 @@
         </div>
         <div class="col-lg-3 col-md-6 mb-5">
             <h5 class="mb-4 text-white text-uppercase font-weight-bold">Kategori</h5>
-            <div  id="footerCategories" class="d-flex flex-wrap m-n1"><!-- populated by js/main.js --></div>
+            <div  id="footerCategories" class="d-flex flex-wrap m-n1">
+                <!-- populated by js/main.js -->
+            </div>
         </div>
     </div>
 </div>
@@ -370,8 +367,6 @@
 
     <!-- Template Javascript -->
     <script src="../js/main.js"></script>
-    <!-- Authentication Script -->
-    <script src="../js/auth.js"></script>
     <script>
 const dateElement = document.getElementById("currentDate");
 const today = new Date();
@@ -387,6 +382,4 @@ dateElement.textContent = formattedDate;
 </body>
 
 </html>
-
-
 
