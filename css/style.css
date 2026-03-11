@@ -9567,6 +9567,11 @@ h6,
   z-index: 1;
 }
 
+/* nav controls are unnecessary for breaking news; hide to remove small "before" button */
+.tranding-carousel .owl-nav {
+  display: none !important;
+}
+
 .tranding-carousel .owl-nav .owl-prev,
 .tranding-carousel .owl-nav .owl-next {
   position: relative;

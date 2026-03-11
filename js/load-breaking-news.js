@@ -34,20 +34,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 breakingNews.appendChild(item);
             });
 
-            // re-initialize Owl Carousel in case it was already running
-            if (typeof $.fn.owlCarousel === 'function' && breakingNews.closest('.owl-carousel')) {
-                const $bc = $(breakingNews);
-                $bc.trigger('destroy.owl.carousel');
-                $bc.html($bc.find('.owl-stage-outer').html()).removeClass('owl-loaded');
-                $bc.owlCarousel({
-                    autoplay: true,
-                    smartSpeed: 2000,
-                    items: 1,
-                    dots: false,
-                    loop: true,
-                    nav : true,
-                    navText : ['<i class="fa fa-angle-left"></i>','<i class="fa fa-angle-right"></i>']
-                });
+            // if carousel already initialized, simply refresh to pick up new items
+            if (typeof $.fn.owlCarousel === 'function' && $(breakingNews).hasClass('owl-loaded')) {
+                $(breakingNews).trigger('refresh.owl.carousel');
             }
         })
         .catch(err => {
