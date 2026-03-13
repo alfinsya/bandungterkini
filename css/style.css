@@ -9577,6 +9577,11 @@ h6,
   transform: translateY(-50%);
 }
 
+/* hide every carousel navigation element globally to avoid stray buttons */
+.owl-carousel .owl-nav {
+  display: none !important;
+}
+
 /* remove vertical gap above and reduce padding inside breaking news section */
 .container-fluid.bg-dark.py-3 {
   margin-top: 0 !important;
