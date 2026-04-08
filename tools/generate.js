@@ -75,7 +75,7 @@ function extractFirstImage(content) {
   
   while ((match = imgRegex.exec(content)) !== null) {
     const src = match[1];
-    if (!src.includes('logo.png') && 
+    if (!src.includes('favicon.ico') && 
         !src.includes('ads-') && 
         !src.includes('cewe') && 
         !src.includes('cowok') && 
@@ -85,53 +85,121 @@ function extractFirstImage(content) {
     }
   }
   
-  return 'img/logo.png';
+  return 'img/favicon.ico';
+}
+
+function detectCategoryFromText(text) {
+  if (!text) return 'News';
+  const lowerText = text.toLowerCase();
+
+  // Check for specific keywords in title and assign categories
+  if (lowerText.includes('perhutani') || lowerText.includes('kehutanan') || lowerText.includes('hutan')) {
+    return 'Perhutani';
+  }
+  if (lowerText.includes('lingkungan') || lowerText.includes('pohon') || lowerText.includes('penanaman') || lowerText.includes('reboisasi') || lowerText.includes('pelestarian')) {
+    return 'Lingkungan';
+  }
+  if (lowerText.includes('ekonomi') || lowerText.includes('umkm') || lowerText.includes('koperasi') || lowerText.includes('usaha') || lowerText.includes('bisnis')) {
+    return 'Ekonomi';
+  }
+  if (lowerText.includes('digital') || lowerText.includes('teknologi') || lowerText.includes('komputasional') || lowerText.includes('internet') || lowerText.includes('cloud')) {
+    return 'Teknologi';
+  }
+  if (lowerText.includes('olahraga') || lowerText.includes('timnas') || lowerText.includes('sepak bola') || lowerText.includes('persib') || lowerText.includes('bojan') || lowerText.includes('kurzawa')) {
+    return 'Olahraga';
+  }
+  if (lowerText.includes('pendidikan') || lowerText.includes('mahasiswa') || lowerText.includes('siswa') || lowerText.includes('sekolah') || lowerText.includes('universitas')) {
+    return 'Pendidikan';
+  }
+  if (lowerText.includes('bencana') || lowerText.includes('longsor') || lowerText.includes('banjir') || lowerText.includes('gempa')) {
+    return 'Bencana';
+  }
+  if (lowerText.includes('sosial') || lowerText.includes('masyarakat') || lowerText.includes('komunitas') || lowerText.includes('kesehatan')) {
+    return 'Sosial';
+  }
+
+  // Default category
+  return 'News';
 }
 
 function scanLocalArticles() {
   const localArticles = [];
   if (!fs.existsSync(OUT_DIR)) return localArticles;
-  
+
   const files = fs.readdirSync(OUT_DIR).filter(f => f.endsWith('.html') && !f.endsWith('-f.html'));
   console.log(`📂 Found ${files.length} local HTML files in article/ folder`);
-  
+
   for (const file of files) {
     try {
       const slug = file.replace('.html', '');
       const filePath = path.join(OUT_DIR, file);
       const content = fs.readFileSync(filePath, 'utf8');
-      
+
       // Extract title from <h1> or <title> tag
       let title = 'Untitled';
       const h1Match = content.match(/<h1[^>]*>([^<]+)<\/h1>/);
       const titleMatch = content.match(/<title>([^<]+)<\/title>/);
       if (h1Match) title = h1Match[1].trim();
       else if (titleMatch) title = titleMatch[1].trim();
-      
+
       // Extract excerpt from first <p> tag
       let excerpt = '';
       const pMatch = content.match(/<p[^>]*>([^<]+)<\/p>/);
       if (pMatch) excerpt = pMatch[1].trim().substring(0, 150);
-      
+
       // Extract first image from content
       const imagePath = extractFirstImage(content);
-      
+
+      // Extract category/badge and date from article metadata area (if present)
+      let category = 'Berita';
+      let date = new Date().toISOString().split('T')[0];
+      const metaBlockMatch = content.match(/<div[^>]*class="[^"]*mb-3[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
+      if (metaBlockMatch) {
+        const metaBlock = metaBlockMatch[1];
+        const catMatch = metaBlock.match(/<a[^>]*class="[^"]*badge[^"]*"[^>]*>([^<]+)<\/a>/i);
+        if (catMatch) {
+          const cat = catMatch[1].trim();
+          if (cat && cat.toLowerCase() !== 'berita') category = cat;
+        }
+
+        const dtMatch = metaBlock.match(/<a[^>]*class="[^"]*text-body[^"]*"[^>]*>([^<]+)<\/a>/i);
+        if (dtMatch) {
+          const dt = dtMatch[1].trim();
+          if (dt) date = dt;
+        }
+      } else {
+        // fallback: search for the first text-body link outside meta block
+        const dateMatch = content.match(/<a[^>]*class="[^"]*text-body[^"]*"[^>]*>([^<]+)<\/a>/i);
+        if (dateMatch) {
+          const dt = dateMatch[1].trim();
+          if (dt && dt.toLowerCase() !== 'register') date = dt;
+        }
+      }
+
+      // If category is still generic, try to detect from title or content
+      if (category === 'Berita') {
+        const detectedCategory = detectCategoryFromText(title + ' ' + excerpt);
+        if (detectedCategory !== 'News') {
+          category = detectedCategory;
+        }
+      }
+
       localArticles.push({
         title,
         excerpt,
-        category: 'Local',
-        date: new Date().toISOString().split('T')[0],
+        category,
+        date,
         image: imagePath,
         url: `article/${slug}.html`,
         slug,
         isLocal: true
       });
-      console.log(`   📄 ${slug} (image: ${imagePath})`);
+      console.log(`   📄 ${slug} (category: ${category}, date: ${date}, image: ${imagePath})`);
     } catch (err) {
       console.warn(`   ⚠️  Error reading ${file}:`, err.message);
     }
   }
-  
+
   return localArticles;
 }
 
@@ -292,8 +360,8 @@ async function generateArticles() {
     console.log(`   ✨ New: ${newCount}`);
     console.log(`   🔄 Updated: ${updateCount}`);
     console.log(`   ⏭️  Skipped: ${skipCount}`);
-    console.log(`   � Local preserved: ${localPreserved}`);
-    console.log(`   �🗑️  Deleted: ${removed.length}`);
+    console.log(`     Local preserved: ${localPreserved}`);
+    console.log(`    🗑️  Deleted: ${removed.length}`);
     console.log(`   📁 Total: ${existingArticles.length}`);
     console.log(`\n✅ Done!`);
   } catch (err) {
